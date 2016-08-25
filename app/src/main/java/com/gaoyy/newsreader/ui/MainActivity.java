@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity
 
         newsPagerAdapter = new NewsPagerAdapter(this,getSupportFragmentManager(), newsType, fragmentList);
         mainViewpager.setAdapter(newsPagerAdapter);
+        mainViewpager.setOffscreenPageLimit(1);
         mainTablayout.setBackgroundColor(getResources().getColor(R.color.white));
         mainTablayout.setTabMode(TabLayout.MODE_SCROLLABLE);
         mainTablayout.setupWithViewPager(mainViewpager);

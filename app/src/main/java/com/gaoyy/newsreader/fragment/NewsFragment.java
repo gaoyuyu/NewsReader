@@ -3,7 +3,6 @@ package com.gaoyy.newsreader.fragment;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -13,6 +12,7 @@ import android.view.ViewGroup;
 
 import com.gaoyy.newsreader.R;
 import com.gaoyy.newsreader.adapter.NewsListAdapter;
+import com.gaoyy.newsreader.base.LazyFragment;
 import com.gaoyy.newsreader.bean.News;
 import com.gaoyy.newsreader.utils.Global;
 import com.gaoyy.newsreader.utils.Tool;
@@ -25,7 +25,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 
-public class NewsFragment extends Fragment
+public class NewsFragment extends LazyFragment
 {
 
     public NewsFragment()
@@ -33,6 +33,8 @@ public class NewsFragment extends Fragment
         // Required empty public constructor
     }
 
+    // 标志位，标志已经初始化完成。
+    private boolean isPrepared;
     private View rootView;
     private RecyclerView fragmentNewsRv;
     private ProgressWheel fragmentNewsProgresswheel;
@@ -52,11 +54,20 @@ public class NewsFragment extends Fragment
         {
             rootView = inflater.inflate(R.layout.fragment_news, container, false);
         }
+        isPrepared = true;
+        lazyLoad();
+        return rootView;
+    }
+
+    @Override
+    protected void lazyLoad()
+    {
+        if (!isPrepared || !isVisible)
+        {
+            return;
+        }
         assignViews(rootView);
         new NewsTask().execute();
-
-
-        return rootView;
     }
 
     class NewsTask extends AsyncTask<String, String, List<News>>
@@ -66,7 +77,7 @@ public class NewsFragment extends Fragment
         protected List<News> doInBackground(String... params)
         {
             Request request = new Request.Builder()
-                    .url(Global.NEWS_URL + "?type="+getResources().getString(getArguments().getInt("type"))+"&key="+Global.APPKEY)
+                    .url(Global.NEWS_URL + "?type=" + getResources().getString(getArguments().getInt("type")) + "&key=" + Global.APPKEY)
                     .build();
             try
             {
@@ -89,11 +100,11 @@ public class NewsFragment extends Fragment
         protected void onPostExecute(List<News> newses)
         {
             super.onPostExecute(newses);
-            if(newses != null)
+            if (newses != null)
             {
                 fragmentNewsRv.setVisibility(View.VISIBLE);
                 fragmentNewsProgresswheel.setVisibility(View.GONE);
-                newsListAdapter = new NewsListAdapter(getActivity(),newses);
+                newsListAdapter = new NewsListAdapter(getActivity(), newses);
                 fragmentNewsRv.setAdapter(newsListAdapter);
                 fragmentNewsRv.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
             }
