@@ -6,6 +6,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
@@ -24,8 +25,21 @@ public class NewsListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private LayoutInflater inflater;
     private List<News> data;
     private Context context;
+    private OnItemClickListener onItemClickListener;
 
-    public NewsListAdapter(Context context,List<News> data )
+
+    public interface OnItemClickListener
+    {
+        void onItemClick(View view, int position);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener)
+    {
+        this.onItemClickListener = listener;
+    }
+
+
+    public NewsListAdapter(Context context, List<News> data)
     {
         this.context = context;
         this.data = data;
@@ -48,10 +62,14 @@ public class NewsListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         Uri picUri = Uri.parse(news.getThumbnail_pic_s());
         newsViewHolder.itemNewsImg.setHierarchy(Tool.getCommonGenericDraweeHierarchy(context));
-        newsViewHolder.itemNewsImg.setController(Tool.getCommonDraweeController(picUri,newsViewHolder.itemNewsImg));
+        newsViewHolder.itemNewsImg.setController(Tool.getCommonDraweeController(picUri, newsViewHolder.itemNewsImg));
 
         newsViewHolder.itemNewsTitle.setText(news.getTitle());
-        newsViewHolder.itemNewsDate.setText(news.getAuthor_name()+""+news.getDate());
+        newsViewHolder.itemNewsDate.setText(news.getAuthor_name() + "" + news.getDate());
+        if(onItemClickListener != null)
+        {
+            newsViewHolder.itemNewsLayout.setOnClickListener(new BasicOnClickListener(newsViewHolder));
+        }
     }
 
     @Override
@@ -66,6 +84,7 @@ public class NewsListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         private SimpleDraweeView itemNewsImg;
         private TextView itemNewsTitle;
         private TextView itemNewsDate;
+        private RelativeLayout itemNewsLayout;
 
 
         public NewsViewHolder(View itemView)
@@ -74,8 +93,35 @@ public class NewsListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             itemNewsImg = (SimpleDraweeView) itemView.findViewById(R.id.item_news_img);
             itemNewsTitle = (TextView) itemView.findViewById(R.id.item_news_title);
             itemNewsDate = (TextView) itemView.findViewById(R.id.item_news_date);
+            itemNewsLayout = (RelativeLayout) itemView.findViewById(R.id.item_news_layout);
         }
     }
 
 
+    public void updateData(List<News> s)
+    {
+        this.data = s;
+        notifyDataSetChanged();
+    }
+
+    private class BasicOnClickListener implements View.OnClickListener
+    {
+        private NewsViewHolder newsViewHolder;
+
+        public BasicOnClickListener(NewsViewHolder newsViewHolder)
+        {
+            this.newsViewHolder = newsViewHolder;
+        }
+
+        @Override
+        public void onClick(View v)
+        {
+            switch (v.getId())
+            {
+                case R.id.item_news_layout:
+                    onItemClickListener.onItemClick(newsViewHolder.itemNewsLayout, newsViewHolder.getLayoutPosition());
+                    break;
+            }
+        }
+    }
 }

@@ -1,6 +1,7 @@
 package com.gaoyy.newsreader.fragment;
 
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -14,18 +15,20 @@ import com.gaoyy.newsreader.R;
 import com.gaoyy.newsreader.adapter.NewsListAdapter;
 import com.gaoyy.newsreader.base.LazyFragment;
 import com.gaoyy.newsreader.bean.News;
+import com.gaoyy.newsreader.ui.NewsDetailActivity;
 import com.gaoyy.newsreader.utils.Global;
 import com.gaoyy.newsreader.utils.Tool;
 import com.pnikosis.materialishprogress.ProgressWheel;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import okhttp3.Request;
 import okhttp3.Response;
 
 
-public class NewsFragment extends LazyFragment
+public class NewsFragment extends LazyFragment implements NewsListAdapter.OnItemClickListener
 {
 
     public NewsFragment()
@@ -39,7 +42,7 @@ public class NewsFragment extends LazyFragment
     private RecyclerView fragmentNewsRv;
     private ProgressWheel fragmentNewsProgresswheel;
     private NewsListAdapter newsListAdapter;
-    private List<News> list;
+    private List<News> list = new ArrayList<News>();
 
     private void assignViews(View rootView)
     {
@@ -67,7 +70,20 @@ public class NewsFragment extends LazyFragment
             return;
         }
         assignViews(rootView);
+        newsListAdapter = new NewsListAdapter(getActivity(), list);
+        fragmentNewsRv.setAdapter(newsListAdapter);
+        fragmentNewsRv.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
+        newsListAdapter.setOnItemClickListener(this);
         new NewsTask().execute();
+    }
+
+    @Override
+    public void onItemClick(View view, int position)
+    {
+        Intent intent = new Intent();
+        intent.setClass(getActivity(), NewsDetailActivity.class);
+        intent.putExtra("url",list.get(position).getUrl());
+        startActivity(intent);
     }
 
     class NewsTask extends AsyncTask<String, String, List<News>>
@@ -104,9 +120,7 @@ public class NewsFragment extends LazyFragment
             {
                 fragmentNewsRv.setVisibility(View.VISIBLE);
                 fragmentNewsProgresswheel.setVisibility(View.GONE);
-                newsListAdapter = new NewsListAdapter(getActivity(), newses);
-                fragmentNewsRv.setAdapter(newsListAdapter);
-                fragmentNewsRv.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
+                newsListAdapter.updateData(newses);
             }
         }
     }
